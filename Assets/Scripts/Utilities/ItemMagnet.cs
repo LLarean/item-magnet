@@ -11,11 +11,11 @@ namespace Utilities
         [SerializeField]
         private RectTransform _item;
 
-        private bool _isBeingDragged;
         private Vector2 _halfSize;
         private Vector2 _normalizedPosition;
 
-        private IEnumerator _coroutine;
+        private bool _isBeingDragged;
+        private Coroutine _coroutine;
 
         private void Awake()
         {
@@ -79,16 +79,30 @@ namespace Utilities
 
             Vector2 position = canvasRawSize * 0.5f + (_item.anchoredPosition - new Vector2(canvasBottomLeftX, canvasBottomLeftY));
 
+            position = SetSidePosition(position, canvasWidth, canvasHeight);
+
+            position -= canvasRawSize * 0.5f;
+
+            _normalizedPosition.Set(position.x / canvasWidth, position.y / canvasHeight);
+
+            position += new Vector2(canvasBottomLeftX, canvasBottomLeftY);
+
+            StopAnimate();
+            _coroutine = StartCoroutine(AnimateMovement(position));
+        }
+
+        private Vector2 SetSidePosition(Vector2 position, float canvasWidth, float canvasHeight)
+        {
             float distToLeft = position.x;
             float distToRight = canvasWidth - distToLeft;
 
             float distToBottom = position.y;
             float distToTop = canvasHeight - distToBottom;
 
-            float horDistance = Mathf.Min(distToLeft, distToRight);
-            float vertDistance = Mathf.Min(distToBottom, distToTop);
+            float horizontalDistance = Mathf.Min(distToLeft, distToRight);
+            float verticalDistance = Mathf.Min(distToBottom, distToTop);
 
-            if (horDistance < vertDistance)
+            if (horizontalDistance < verticalDistance)
             {
                 if (distToLeft < distToRight)
                 {
@@ -115,23 +129,9 @@ namespace Utilities
                 position.x = Mathf.Clamp(position.x, _halfSize.x, canvasWidth - _halfSize.x);
             }
 
-            position -= canvasRawSize * 0.5f;
-
-            _normalizedPosition.Set(position.x / canvasWidth, position.y / canvasHeight);
-
-            position += new Vector2(canvasBottomLeftX, canvasBottomLeftY);
-
-            if (_coroutine != null)
-            {
-                StopCoroutine(_coroutine);
-                _coroutine = null;
-            }
-
-            _coroutine = AnimateMovement(position);
-            StartCoroutine(_coroutine);
-        
+            return position;
         }
-    
+
         private void StopAnimate()
         {
             if (_coroutine == null) return;
