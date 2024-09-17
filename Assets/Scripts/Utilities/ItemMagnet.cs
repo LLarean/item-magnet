@@ -10,7 +10,9 @@ namespace Utilities
         private RectTransform _fieldMagnetism;
         [SerializeField]
         private RectTransform _item;
-
+        [SerializeField]
+        private bool _shouldRotate;
+        
         private Vector2 _halfSize;
         private Vector2 _normalizedPosition;
 
@@ -21,12 +23,12 @@ namespace Utilities
         {
             _halfSize = _item.sizeDelta * 0.5f;
             SetNormalizedPosition();
-            SetAnchorsToHalf();
         }
         
         public void OnBeginDrag(PointerEventData data)
         {
             StopAnimate();
+            SetAnchorsToHalf();
             _isBeingDragged = true;
         }
     
@@ -80,11 +82,8 @@ namespace Utilities
             Vector2 position = canvasRawSize * 0.5f + (_item.anchoredPosition - new Vector2(canvasBottomLeftX, canvasBottomLeftY));
 
             position = SetSidePosition(position, canvasWidth, canvasHeight);
-
             position -= canvasRawSize * 0.5f;
-
             _normalizedPosition.Set(position.x / canvasWidth, position.y / canvasHeight);
-
             position += new Vector2(canvasBottomLeftX, canvasBottomLeftY);
 
             StopAnimate();
@@ -107,10 +106,12 @@ namespace Utilities
                 if (distToLeft < distToRight)
                 {
                     position = new Vector2(_halfSize.x, position.y);
+                    Rotate(90);
                 }
                 else
                 {
                     position = new Vector2(canvasWidth - _halfSize.x, position.y);
+                    Rotate(-90);
                 }
 
                 position.y = Mathf.Clamp(position.y, _halfSize.y, canvasHeight - _halfSize.y);
@@ -120,16 +121,29 @@ namespace Utilities
                 if (distToBottom < distToTop)
                 {
                     position = new Vector2(position.x, _halfSize.y);
+                    Rotate(0);
                 }
                 else
                 {
                     position = new Vector2(position.x, canvasHeight - _halfSize.y);
+                    Rotate(0);
                 }
 
                 position.x = Mathf.Clamp(position.x, _halfSize.x, canvasWidth - _halfSize.x);
             }
 
             return position;
+        }
+
+        private void Rotate(float angle)
+        {
+            if (_shouldRotate == false) return;
+            
+            var rotateAngle = new Quaternion
+            {
+                eulerAngles = new Vector3(0f, 0f, angle)
+            };
+            _item.transform.rotation = rotateAngle;
         }
 
         private void StopAnimate()
