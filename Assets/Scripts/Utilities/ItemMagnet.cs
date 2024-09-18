@@ -105,12 +105,12 @@ namespace Utilities
             {
                 if (distToLeft < distToRight)
                 {
-                    position = new Vector2(_halfSize.x, position.y);
+                    position = new Vector2(_halfSize.y, position.y);
                     Rotate(90);
                 }
                 else
                 {
-                    position = new Vector2(canvasWidth - _halfSize.x, position.y);
+                    position = new Vector2(canvasWidth - _halfSize.y, position.y);
                     Rotate(-90);
                 }
 
