@@ -13,15 +13,21 @@ namespace Utilities
         [SerializeField]
         private bool _shouldRotate;
         
+        private bool _isHorizontally;
+
         private Vector2 _halfSize;
         private Vector2 _normalizedPosition;
 
         private bool _isBeingDragged;
         private Coroutine _coroutine;
 
+        // private float _size;
+
         private void Awake()
         {
             _halfSize = _item.sizeDelta * 0.5f;
+            _isHorizontally = _item.sizeDelta.x > _item.sizeDelta.y;
+            // var temp = _item.rotation.z;
             SetNormalizedPosition();
         }
         
@@ -103,30 +109,74 @@ namespace Utilities
 
             if (horizontalDistance < verticalDistance)
             {
+                // Horizontal
                 if (distToLeft < distToRight)
                 {
-                    position = new Vector2(_halfSize.y, position.y);
-                    Rotate(90);
+                    // Left 
+                    if (_isHorizontally == true)
+                    {
+                        position = new Vector2(_halfSize.y, position.y);
+                        Rotate(90);
+                    }
+                    else
+                    {
+                        position = new Vector2(_halfSize.x, position.y);
+                        Rotate(0);
+                    }
                 }
                 else
                 {
-                    position = new Vector2(canvasWidth - _halfSize.y, position.y);
-                    Rotate(-90);
+                    // Right
+                    if (_isHorizontally == true)
+                    {
+                        position = new Vector2(canvasWidth - _halfSize.y, position.y);
+                        Rotate(-90);
+                    }
+                    else
+                    {
+                        position = new Vector2(canvasWidth - _halfSize.x, position.y);
+                        Rotate(180);
+                    }
                 }
 
                 position.y = Mathf.Clamp(position.y, _halfSize.y, canvasHeight - _halfSize.y);
             }
             else
             {
+                // Vertical
                 if (distToBottom < distToTop)
                 {
-                    position = new Vector2(position.x, _halfSize.y);
-                    Rotate(0);
+                    // Bottom
+                    if (_isHorizontally == true)
+                    {
+                        position = new Vector2(position.x, _halfSize.y);
+                        Rotate(0);
+                    }
+                    else
+                    {
+                        position = new Vector2(position.x, _halfSize.x);
+                        Rotate(-90);
+                    }
+                    
+                    // position = new Vector2(position.x, _halfSize.y);
+                    // Rotate(0);
                 }
                 else
                 {
-                    position = new Vector2(position.x, canvasHeight - _halfSize.y);
-                    Rotate(0);
+                    // Top
+                    if (_isHorizontally == true)
+                    {
+                        position = new Vector2(position.x, canvasHeight - _halfSize.y);
+                        Rotate(0);
+                    }
+                    else
+                    {
+                        position = new Vector2(position.x, canvasHeight - _halfSize.x);
+                        Rotate(-90);
+                    }
+                    
+                    // position = new Vector2(position.x, canvasHeight - _halfSize.y);
+                    // Rotate(0);
                 }
 
                 position.x = Mathf.Clamp(position.x, _halfSize.x, canvasWidth - _halfSize.x);
