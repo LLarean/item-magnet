@@ -10,10 +10,16 @@ namespace Utilities
         private RectTransform _fieldMagnetism;
         [SerializeField]
         private RectTransform _item;
+        [Space]
         [SerializeField]
         private bool _shouldRotate;
+        [SerializeField]
+        private bool _isBaseHorizontally;
         
         private bool _isHorizontally;
+        
+        private float _startAngle;
+        private float _rotateAngle = 90f;
 
         private Vector2 _halfSize;
         private Vector2 _normalizedPosition;
@@ -21,13 +27,11 @@ namespace Utilities
         private bool _isBeingDragged;
         private Coroutine _coroutine;
 
-        // private float _size;
-
         private void Awake()
         {
             _halfSize = _item.sizeDelta * 0.5f;
             _isHorizontally = _item.sizeDelta.x > _item.sizeDelta.y;
-            // var temp = _item.rotation.z;
+            _startAngle = _item.transform.rotation.eulerAngles.z;
             SetNormalizedPosition();
         }
         
@@ -87,7 +91,7 @@ namespace Utilities
 
             Vector2 position = canvasRawSize * 0.5f + (_item.anchoredPosition - new Vector2(canvasBottomLeftX, canvasBottomLeftY));
 
-            position = SetSidePosition(position, canvasWidth, canvasHeight);
+            position = GetPosition(position, canvasWidth, canvasHeight);
             position -= canvasRawSize * 0.5f;
             _normalizedPosition.Set(position.x / canvasWidth, position.y / canvasHeight);
             position += new Vector2(canvasBottomLeftX, canvasBottomLeftY);
@@ -96,7 +100,7 @@ namespace Utilities
             _coroutine = StartCoroutine(AnimateMovement(position));
         }
 
-        private Vector2 SetSidePosition(Vector2 position, float canvasWidth, float canvasHeight)
+        private Vector2 GetPosition(Vector2 position, float canvasWidth, float canvasHeight)
         {
             float distToLeft = position.x;
             float distToRight = canvasWidth - distToLeft;
@@ -116,13 +120,13 @@ namespace Utilities
                     if (_isHorizontally == true)
                     {
                         position = new Vector2(_halfSize.y, position.y);
-                        Rotate(90);
                     }
                     else
                     {
-                        position = new Vector2(_halfSize.x, position.y);
-                        Rotate(0);
+                        position = new Vector2(_halfSize.x, position.y); 
                     }
+
+                    Rotate(MagnetDirection.Left);
                 }
                 else
                 {
@@ -130,13 +134,13 @@ namespace Utilities
                     if (_isHorizontally == true)
                     {
                         position = new Vector2(canvasWidth - _halfSize.y, position.y);
-                        Rotate(-90);
                     }
                     else
                     {
                         position = new Vector2(canvasWidth - _halfSize.x, position.y);
-                        Rotate(180);
                     }
+                    
+                    Rotate(MagnetDirection.Right);
                 }
 
                 position.y = Mathf.Clamp(position.y, _halfSize.y, canvasHeight - _halfSize.y);
@@ -150,16 +154,15 @@ namespace Utilities
                     if (_isHorizontally == true)
                     {
                         position = new Vector2(position.x, _halfSize.y);
-                        Rotate(0);
+                        // Rotate(0);
                     }
                     else
                     {
                         position = new Vector2(position.x, _halfSize.x);
-                        Rotate(-90);
+                        // Rotate(-90);
                     }
                     
-                    // position = new Vector2(position.x, _halfSize.y);
-                    // Rotate(0);
+                    Rotate(MagnetDirection.Bottom);
                 }
                 else
                 {
@@ -167,16 +170,13 @@ namespace Utilities
                     if (_isHorizontally == true)
                     {
                         position = new Vector2(position.x, canvasHeight - _halfSize.y);
-                        Rotate(0);
                     }
                     else
                     {
                         position = new Vector2(position.x, canvasHeight - _halfSize.x);
-                        Rotate(-90);
                     }
                     
-                    // position = new Vector2(position.x, canvasHeight - _halfSize.y);
-                    // Rotate(0);
+                    Rotate(MagnetDirection.Top);
                 }
 
                 position.x = Mathf.Clamp(position.x, _halfSize.x, canvasWidth - _halfSize.x);
@@ -185,14 +185,28 @@ namespace Utilities
             return position;
         }
 
-        private void Rotate(float angle)
+        private void Rotate(MagnetDirection magnetDirection)
         {
             if (_shouldRotate == false) return;
-            
+
+            var angle = magnetDirection switch
+            {
+                MagnetDirection.Top when _isBaseHorizontally == true => _startAngle,
+                MagnetDirection.Top when _isBaseHorizontally == false => -_rotateAngle,
+                MagnetDirection.Bottom when _isBaseHorizontally == true => _startAngle,
+                MagnetDirection.Bottom when _isBaseHorizontally == false => -_rotateAngle,
+                MagnetDirection.Left when _isBaseHorizontally == true => _startAngle + _rotateAngle,
+                MagnetDirection.Left when _isBaseHorizontally == false => _startAngle,
+                MagnetDirection.Right when _isBaseHorizontally == true => _startAngle - _rotateAngle,
+                MagnetDirection.Right when _isBaseHorizontally == false => _rotateAngle * 2,
+                _ => _startAngle
+            };
+
             var rotateAngle = new Quaternion
             {
                 eulerAngles = new Vector3(0f, 0f, angle)
             };
+            
             _item.transform.rotation = rotateAngle;
         }
 
@@ -217,5 +231,13 @@ namespace Utilities
                 yield return null;
             }
         }
+    }
+
+    public enum MagnetDirection
+    {
+        Top,
+        Left,
+        Right,
+        Bottom,
     }
 }
