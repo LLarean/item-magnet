@@ -5,24 +5,26 @@ using UnityEngine.EventSystems;
 namespace Utilities
 {
     [RequireComponent(typeof(RectTransform))]
-    public class ItemMagnet : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
+    public class ItemMagnetWithOptions : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
     {
         [SerializeField]
         private RectTransform _fieldMagnetism;
         [SerializeField]
         private RectTransform _item;
-        [Space]
+        [Header("Rotation angles along the z axis")]
         [SerializeField]
-        private bool _shouldRotate;
+        private float _topAngle = 0;
         [SerializeField]
-        private bool _isBaseHorizontally;
+        private float _botAngle = 0;
+        [SerializeField]
+        private float _leftAngle = -90;
+        [SerializeField]
+        private float _rightAngle = 90;
         
-        private bool _isHorizontally;
-        
-        private float _startAngle;
-        private float _rotateAngle = 90f;
-
         private Vector2 _halfSize;
+        private bool _isHorizontally;
+        private float _startAngle;
+
         private Vector2 _normalizedPosition;
 
         private bool _isBeingDragged;
@@ -168,12 +170,10 @@ namespace Utilities
                     if (_isHorizontally == true)
                     {
                         position = new Vector2(position.x, _halfSize.y);
-                        // Rotate(0);
                     }
                     else
                     {
                         position = new Vector2(position.x, _halfSize.x);
-                        // Rotate(-90);
                     }
                     
                     SetRotation(MagnetDirection.Bottom);
@@ -201,24 +201,18 @@ namespace Utilities
 
         private void SetRotation(MagnetDirection magnetDirection)
         {
-            if (_shouldRotate == false) return;
-
-            var angle = magnetDirection switch
+            var angleZ = magnetDirection switch
             {
-                MagnetDirection.Top when _isBaseHorizontally == true => _startAngle,
-                MagnetDirection.Top when _isBaseHorizontally == false => -_rotateAngle,
-                MagnetDirection.Bottom when _isBaseHorizontally == true => _startAngle,
-                MagnetDirection.Bottom when _isBaseHorizontally == false => -_rotateAngle,
-                MagnetDirection.Left when _isBaseHorizontally == true => _startAngle + _rotateAngle,
-                MagnetDirection.Left when _isBaseHorizontally == false => _startAngle,
-                MagnetDirection.Right when _isBaseHorizontally == true => _startAngle - _rotateAngle,
-                MagnetDirection.Right when _isBaseHorizontally == false => _rotateAngle * 2,
+                MagnetDirection.Top => _topAngle,
+                MagnetDirection.Bottom => _botAngle,
+                MagnetDirection.Left => _leftAngle,
+                MagnetDirection.Right => _rightAngle,
                 _ => _startAngle
             };
 
             var rotateAngle = new Quaternion
             {
-                eulerAngles = new Vector3(0f, 0f, angle)
+                eulerAngles = new Vector3(0f, 0f, angleZ)
             };
             
             _item.transform.rotation = rotateAngle;
@@ -246,13 +240,4 @@ namespace Utilities
             }
         }
     }
-    
-    public enum MagnetDirection
-    {
-        Top,
-        Left,
-        Right,
-        Bottom,
-    }
-
 }
